@@ -94,15 +94,29 @@
         { id: 5, name: "Кирилл Андреев", avatar: "👤" },
         { id: 6, name: "Кирилл Коваленко", avatar: "👤" },
         { id: 7, name: "Алена Леонова", avatar: "👤" },
-        { id: 8, name: "Миша Плесовских", avatar: "👤" },
+        { id: 8, name: "Миша Плесовских", opacity: 1, avatar: "👤" },
         { id: 9, name: "Максим Кугубаев", avatar: "👤" },
-        { id: 10, name: "Савелий Кухаренко", avatar: "👤" }
+        { id: 10, name: "Савелий Кухаренко", avatar: "👤" },
+        { id: 11, name: "Ольга Сидорова", avatar: "👤" },
+        { id: 12, name: "Илья Файдель", avatar: "👤" },
+        { id: 13, name: "Василина Пестова", avatar: "👤" },
+        { id: 14, name: "Ярослав Прокопьев", avatar: "👤" },
+        { id: 15, name: "Максимка", avatar: "👤" },
+        { id: 16, name: "Екатерина Горбань", avatar: "👤" }
     ];
 
     let votesData = JSON.parse(localStorage.getItem('electionVotes_zavhoz_secure'));
     if (!votesData) {
         votesData = {};
         participants.forEach(p => votesData[p.id] = 0);
+        saveData();
+    } else {
+        // Проверяем, появились ли новые участники, которых еще нет в сохраненных логах браузера
+        participants.forEach(p => {
+            if (votesData[p.id] === undefined) {
+                votesData[p.id] = 0;
+            }
+        });
         saveData();
     }
 
@@ -177,46 +191,3 @@
 
 </body>
 </html>
-<!-- Секция нашей команды -->
-<section class="team-section">
-    <h2 class="team-title">Наша команда</h2>
-    <div class="team-container">
-        
-        <div class="team-card">
-            <div class="avatar">ОС</div>
-            <h3>Ольга Сидорова</h3>
-            <p class="role">Участник команды</p>
-        </div>
-
-        <div class="team-card">
-            <div class="avatar">ИФ</div>
-            <h3>Илья Файдель</h3>
-            <p class="role">Участник команды</p>
-        </div>
-
-        <div class="team-card">
-            <div class="avatar">ВП</div>
-            <h3>Василина Пестова</h3>
-            <p class="role">Участник команды</p>
-        </div>
-
-        <div class="team-card">
-            <div class="avatar">ЯП</div>
-            <h3>Ярослав Прокопьев</h3>
-            <p class="role">Участник команды</p>
-        </div>
-
-        <div class="team-card">
-            <div class="avatar">М</div>
-            <h3>Максимка</h3>
-            <p class="role">Участник команды</p>
-        </div>
-
-        <div class="team-card">
-            <div class="avatar">ЕГ</div>
-            <h3>Екатерина Горбань</h3>
-            <p class="role">Участник команды</p>
-        </div>
-
-    </div>
-</section>
