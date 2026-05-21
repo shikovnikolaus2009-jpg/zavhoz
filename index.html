@@ -31,11 +31,29 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            cursor: pointer; /* Показывает, что на заголовок можно кликнуть */
+            cursor: pointer;
             user-select: none;
         }
         header p { color: var(--text-muted); font-size: 1.1rem; }
         
+        .category-section {
+            margin-bottom: 5px;
+            background: #161616;
+            padding: 30px 20px;
+            border-radius: 20px;
+            border: 1px solid #222;
+        }
+        .category-title {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-left: 5px solid var(--primary);
+            padding-left: 15px;
+        }
+
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
         
         .card { 
@@ -74,105 +92,157 @@
 
 <div class="container">
     <header>
-        <!-- Секретный клик привязан к этому заголовку -->
         <h1 onclick="secretClick(this)">Завхоз</h1>
-        <p>Проголосуйте за своего фаворита!</p>
+        <p>Проголосуйте за своего фаворита в каждой номинации!</p>
     </header>
 
-    <div class="grid" id="participants-grid"></div>
+    <div id="categories-container"></div>
 </div>
 
 <script>
-    // Секретный пароль для сброса (можете поменять на любой свой)
     const SECRET_PASSWORD = "1234";
 
-    const participants = [
-        { id: 1, name: "Шиков Николай", avatar: "👤" },
-        { id: 2, name: "Виталий Иванов", avatar: "👤" },
-        { id: 3, name: "Дмитрий Калинин", avatar: "👤" },
-        { id: 4, name: "Даша Тутынева", avatar: "👤" },
-        { id: 5, name: "Кирилл Андреев", avatar: "👤" },
-        { id: 6, name: "Кирилл Коваленко", avatar: "👤" },
-        { id: 7, name: "Алена Леонова", avatar: "👤" },
-        { id: 8, name: "Миша Плесовских", opacity: 1, avatar: "👤" },
-        { id: 9, name: "Максим Кугубаев", avatar: "👤" },
-        { id: 10, name: "Савелий Кухаренко", avatar: "👤" },
-        { id: 11, name: "Ольга Сидорова", avatar: "👤" },
-        { id: 12, name: "Илья Файдель", avatar: "👤" },
-        { id: 13, name: "Василина Пестова", avatar: "👤" },
-        { id: 14, name: "Ярослав Прокопьев", avatar: "👤" },
-        { id: 15, name: "Максимка", avatar: "👤" },
-        { id: 16, name: "Екатерина Горбань", avatar: "👤" }
+    // Главный список всех участников с их базовыми ID
+    const allParticipants = {
+        1: { name: "Шиков Николай", avatar: "👤" },
+        2: { name: "Виталий Иванов", avatar: "👤" },
+        3: { name: "Дмитрий Калинин", avatar: "👤" },
+        4: { name: "Даша Тутынева", avatar: "👤" },
+        5: { name: "Кирилл Андреев", avatar: "👤" },
+        6: { name: "Кирилл Коваленко", avatar: "👤" },
+        7: { name: "Алена Леонова", avatar: "👤" },
+        8: { name: "Миша Плесовских", avatar: "👤" },
+        9: { name: "Максим Кугубаев", avatar: "👤" },
+        10: { name: "Савелий Кухаренко", avatar: "👤" },
+        11: { name: "Ольга Сидорова", avatar: "👤" },
+        12: { name: "Илья Файдель", avatar: "👤" },
+        13: { name: "Василина Пестова", avatar: "👤" },
+        14: { name: "Ярослав Прокопьев", avatar: "👤" },
+        15: { name: "Максимка", avatar: "👤" },
+        16: { name: "Екатерина Горбань", avatar: "👤" }
+    };
+
+    // Определение категорий и участников в них (по их ID)
+    const categories = [
+        {
+            id: "meme",
+            title: 'Мем года туда',
+            userIds: [1, 2, 3, 4, 8, 10] // Шиков, Виталий, Дмитрий, Даша, Миша, Савелий
+        },
+        {
+            id: "skill",
+            title: 'Скилл года',
+            userIds: [3, 1, 2, 8, 15, 16] // Дмитрий, Шиков, Виталий, Миша, Максимка, Екатерина
+        },
+        {
+            id: "zavoz",
+            title: 'Завоз года',
+            userIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] // Все участники
+        }
     ];
 
-    let votesData = JSON.parse(localStorage.getItem('electionVotes_zavhoz_secure'));
+    // Инициализация структуры хранения голосов: {"имя_категории": {"id_участника": количество_голосов}}
+    let votesData = JSON.parse(localStorage.getItem('electionVotes_zavhoz_categories_v1'));
     if (!votesData) {
         votesData = {};
-        participants.forEach(p => votesData[p.id] = 0);
+        categories.forEach(cat => {
+            votesData[cat.id] = {};
+            cat.userIds.forEach(id => {
+                votesData[cat.id][id] = 0;
+            });
+        });
         saveData();
     } else {
-        // Проверяем, появились ли новые участники, которых еще нет в сохраненных логах браузера
-        participants.forEach(p => {
-            if (votesData[p.id] === undefined) {
-                votesData[p.id] = 0;
-            }
+        // Проверяем актуальность структуры на случай обновлений
+        categories.forEach(cat => {
+            if (!votesData[cat.id]) votesData[cat.id] = {};
+            cat.userIds.forEach(id => {
+                if (votesData[cat.id][id] === undefined) {
+                    votesData[cat.id][id] = 0;
+                }
+            });
         });
         saveData();
     }
 
     function saveData() {
-        localStorage.setItem('electionVotes_zavhoz_secure', JSON.stringify(votesData));
+        localStorage.setItem('electionVotes_zavhoz_categories_v1', JSON.stringify(votesData));
     }
 
-    function renderCards() {
-        const grid = document.getElementById('participants-grid');
-        grid.innerHTML = '';
+    function renderPage() {
+        const container = document.getElementById('categories-container');
+        container.innerHTML = '';
 
-        participants.forEach(p => {
-            const isUrl = p.avatar.startsWith('http') || p.avatar.startsWith('./') || p.avatar.endsWith('.png') || p.avatar.endsWith('.jpg');
-            const avatarHtml = isUrl 
-                ? `<img src="${p.avatar}" class="avatar" alt="${p.name}">`
-                : `<div class="avatar">${p.avatar}</div>`;
+        categories.forEach(cat => {
+            // Создаем блок номинации
+            const section = document.createElement('section');
+            section.className = 'category-section';
 
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                ${avatarHtml}
-                <div class="name">${p.name}</div>
-                <div class="votes" id="vote-count-${p.id}">Голосов: ${votesData[p.id]}</div>
-                <button class="vote-btn" onclick="castVote(${p.id})">Голосовать</button>
-            `;
-            grid.appendChild(card);
+            const title = document.createElement('h2');
+            title.className = 'category-title';
+            title.innerText = cat.title;
+            section.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+
+            // Генерируем карточки участников этой номинации
+            cat.userIds.forEach(id => {
+                const p = allParticipants[id];
+                if (!p) return;
+
+                const isUrl = p.avatar.startsWith('http') || p.avatar.startsWith('./') || p.avatar.endsWith('.png') || p.avatar.endsWith('.jpg');
+                const avatarHtml = isUrl 
+                    ? `<img src="${p.avatar}" class="avatar" alt="${p.name}">`
+                    : `<div class="avatar">${p.avatar}</div>`;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    ${avatarHtml}
+                    <div class="name">${p.name}</div>
+                    <div class="votes" id="vote-count-${cat.id}-${id}">Голосов: ${votesData[cat.id][id]}</div>
+                    <button class="vote-btn" onclick="castVote('${cat.id}', ${id})">Голосовать</button>
+                `;
+                grid.appendChild(card);
+            });
+
+            section.appendChild(grid);
+            container.appendChild(section);
         });
     }
 
-    function castVote(id) {
-        votesData[id] += 1;
-        document.getElementById(`vote-count-${id}`).innerText = `Голосов: ${votesData[id]}`;
+    function castVote(categoryId, userId) {
+        votesData[categoryId][userId] += 1;
+        document.getElementById(`vote-count-${categoryId}-${userId}`).innerText = `Голосов: ${votesData[categoryId][userId]}`;
         saveData();
     }
 
-    // Функция защищенного сброса
+    // Сброс всех голосов во всех категориях
     function resetVotes() {
         const pass = prompt('Введите секретный пароль для сброса данных:');
         if (pass === SECRET_PASSWORD) {
-            participants.forEach(p => votesData[p.id] = 0);
+            categories.forEach(cat => {
+                cat.userIds.forEach(id => {
+                    votesData[cat.id][id] = 0;
+                });
+            });
             saveData();
-            renderCards();
-            alert('Все голоса успешно обнулены!');
+            renderPage();
+            alert('Все голоса во всех номинациях успешно обнулены!');
         } else if (pass !== null) {
             alert('Неверный пароль! Доступ заблокирован.');
         }
     }
 
-    // 1. Секретная комбинация клавиш: Ctrl + Shift + Alt + R
+    // Секретные клавиши: Ctrl + Shift + Alt + R
     window.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.shiftKey && e.altKey && (e.key === 'r' || e.key === 'К' || e.key === 'R' || e.key === 'к')) {
             resetVotes();
         }
     });
 
-    // 2. Секретные 5 кликов по заголовку
+    // Секретные 5 кликов по логотипу
     let clickCount = 0;
     let clickTimeout;
     function secretClick() {
@@ -182,11 +252,11 @@
             clickCount = 0;
             resetVotes();
         } else {
-            clickTimeout = setTimeout(() => { clickCount = 0; }, 2000); // Сброс счетчика кликов через 2 секунды простоя
+            clickTimeout = setTimeout(() => { clickCount = 0; }, 2000);
         }
     }
 
-    renderCards();
+    renderPage();
 </script>
 
 </body>
