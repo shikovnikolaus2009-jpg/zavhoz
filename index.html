@@ -189,11 +189,17 @@
             width: 100%; 
             transition: all 0.3s ease; 
         }
-        .vote-btn:hover { 
+        .vote-btn:hover:not(:disabled) { 
             background: var(--gold-gradient);
             color: #000000;
             box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
             border-color: transparent;
+        }
+        .vote-btn:disabled {
+            border-color: #333;
+            color: #555;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.02);
         }
     </style>
 </head>
@@ -218,7 +224,7 @@
         1: { name: "Шиков Николай", avatar: "👤" },
         2: { name: "Виталий Иванов", avatar: "👤" },
         3: { name: "Дмитрий Калинин", avatar: "👤" },
-        4: { name: "Даша Тутынева", avatar: "👤" },
+        4: { name: "Даша Тутынена", avatar: "👤" },
         5: { name: "Кирилл Андреев", avatar: "👤" },
         6: { name: "Кирилл Коваленко", avatar: "👤" },
         7: { name: "Алена Леонова", avatar: "👤" },
@@ -251,6 +257,7 @@
         }
     ];
 
+    // База данных голосов
     let votesData = JSON.parse(localStorage.getItem('electionVotes_zavhoz_categories_v1'));
     if (!votesData) {
         votesData = {};
@@ -271,6 +278,13 @@
             });
         });
         saveData();
+    }
+
+    // База данных пользавателей — кто где уже нажал кнопку
+    let userHistory = JSON.parse(localStorage.getItem('electionUserHistory_zavhoz'));
+    if (!userHistory) {
+        userHistory = {}; // Формат: {"название_категории": true}
+        localStorage.setItem('electionUserHistory_zavhoz', JSON.stringify(userHistory));
     }
 
     function saveData() {
@@ -299,6 +313,9 @@
             const grid = document.createElement('div');
             grid.className = 'grid';
 
+            // Проверяем, голосовал ли уже этот пользователь в текущей категории
+            const hasVotedInThisCategory = userHistory[cat.id] === true;
+
             cat.userIds.forEach(id => {
                 const p = allParticipants[id];
                 if (!p) return;
@@ -312,6 +329,10 @@
                     ? `Голосов: ${votesData[cat.id][id]}` 
                     : `🔒 Результаты скрыты`;
 
+                // Если в категории уже проголосовали, отключаем кнопки для ВСЕХ участников этой категории
+                const buttonDisabledHtml = hasVotedInThisCategory ? 'disabled' : '';
+                const buttonText = hasVotedInThisCategory ? 'Вы уже голосовали' : 'Голосовать';
+
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -320,7 +341,7 @@
                     </div>
                     <div class="name">${p.name}</div>
                     <div class="votes ${showResults ? '' : 'hidden-mode'}" id="vote-count-${cat.id}-${id}">${votesText}</div>
-                    <button class="vote-btn" onclick="castVote('${cat.id}', ${id})">Голосовать</button>
+                    <button class="vote-btn" ${buttonDisabledHtml} onclick="castVote('${cat.id}', ${id})">${buttonText}</button>
                 `;
                 grid.appendChild(card);
             });
@@ -331,34 +352,41 @@
     }
 
     function castVote(categoryId, userId) {
+        // Дополнительная проверка на случай взлома через консоль
+        if (userHistory[categoryId]) {
+            alert("Вы уже отдали свой голос в этой номинации!");
+            return;
+        }
+
+        // Засчитываем голос
         votesData[categoryId][userId] += 1;
         saveData();
 
-        const counterElement = document.getElementById(`vote-count-${categoryId}-${userId}`);
-        
-        if (shouldShowResults()) {
-            counterElement.innerText = `Голосов: ${votesData[categoryId][userId]}`;
-        } else {
-            counterElement.innerText = `✨ Голос учтен`;
-            counterElement.style.color = 'var(--gold-light)';
-            setTimeout(() => {
-                counterElement.innerText = `🔒 Результаты скрыты`;
-                counterElement.style.color = 'var(--text-muted)';
-            }, 1500);
-        }
+        // Запоминаем выбор пользователя локально
+        userHistory[categoryId] = true;
+        localStorage.setItem('electionUserHistory_zavhoz', JSON.stringify(userHistory));
+
+        // Полностью перерисовываем страницу, чтобы мгновенно заблокировать все кнопки в этой категории
+        renderPage();
     }
 
     function resetVotes() {
-        const pass = prompt('Введите секретный пароль для сброса данных:');
+        const pass = prompt('Введите секретный пароль для полного сброса данных сайта:');
         if (pass === SECRET_PASSWORD) {
+            // Обнуляем базу данных
             categories.forEach(cat => {
                 cat.userIds.forEach(id => {
                     votesData[cat.id][id] = 0;
                 });
             });
             saveData();
+            
+            // Очищаем историю голосования для админа, чтобы он снова мог потестировать кнопки
+            userHistory = {};
+            localStorage.setItem('electionUserHistory_zavhoz', JSON.stringify(userHistory));
+            
             renderPage();
-            alert('Все голоса во всех номинациях успешно обнулены!');
+            alert('Все голоса обнулены, блокировки кнопок сняты!');
         } else if (pass !== null) {
             alert('Неверный пароль! Доступ заблокирован.');
         }
