@@ -37,7 +37,7 @@
         header p { color: var(--text-muted); font-size: 1.1rem; }
         
         .category-section {
-            margin-bottom: 5px;
+            margin-bottom: 35px;
             background: #161616;
             padding: 30px 20px;
             border-radius: 20px;
@@ -102,7 +102,10 @@
 <script>
     const SECRET_PASSWORD = "1234";
 
-    // Главный список всех участников с их базовыми ID
+    // Дата открытия результатов: 25 мая 2026 года, 04:00 по Московскому времени (UTC+3)
+    // В формате ISO с указанием таймзоны +03:00
+    const REVEAL_DATE = new Date("2026-05-25T04:00:00+03:00");
+
     const allParticipants = {
         1: { name: "Шиков Николай", avatar: "👤" },
         2: { name: "Виталий Иванов", avatar: "👤" },
@@ -122,26 +125,24 @@
         16: { name: "Екатерина Горбань", avatar: "👤" }
     };
 
-    // Определение категорий и участников в них (по их ID)
     const categories = [
         {
             id: "meme",
             title: 'Мем года туда',
-            userIds: [1, 2, 3, 4, 8, 10] // Шиков, Виталий, Дмитрий, Даша, Миша, Савелий
+            userIds: [1, 2, 3, 4, 8, 10]
         },
         {
             id: "skill",
             title: 'Скилл года',
-            userIds: [3, 1, 2, 8, 15, 16] // Дмитрий, Шиков, Виталий, Миша, Максимка, Екатерина
+            userIds: [3, 1, 2, 8, 15, 16]
         },
         {
             id: "zavoz",
             title: 'Завоз года',
-            userIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] // Все участники
+            userIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         }
     ];
 
-    // Инициализация структуры хранения голосов: {"имя_категории": {"id_участника": количество_голосов}}
     let votesData = JSON.parse(localStorage.getItem('electionVotes_zavhoz_categories_v1'));
     if (!votesData) {
         votesData = {};
@@ -153,7 +154,6 @@
         });
         saveData();
     } else {
-        // Проверяем актуальность структуры на случай обновлений
         categories.forEach(cat => {
             if (!votesData[cat.id]) votesData[cat.id] = {};
             cat.userIds.forEach(id => {
@@ -169,12 +169,18 @@
         localStorage.setItem('electionVotes_zavhoz_categories_v1', JSON.stringify(votesData));
     }
 
+    // Функция проверки: пришло ли время показывать результаты
+    function shouldShowResults() {
+        return new Date() >= REVEAL_DATE;
+    }
+
     function renderPage() {
         const container = document.getElementById('categories-container');
         container.innerHTML = '';
 
+        const showResults = shouldShowResults();
+
         categories.forEach(cat => {
-            // Создаем блок номинации
             const section = document.createElement('section');
             section.className = 'category-section';
 
@@ -186,7 +192,6 @@
             const grid = document.createElement('div');
             grid.className = 'grid';
 
-            // Генерируем карточки участников этой номинации
             cat.userIds.forEach(id => {
                 const p = allParticipants[id];
                 if (!p) return;
@@ -196,12 +201,17 @@
                     ? `<img src="${p.avatar}" class="avatar" alt="${p.name}">`
                     : `<div class="avatar">${p.avatar}</div>`;
 
+                // Если время не пришло, пишем заглушку вместо цифр
+                const votesText = showResults 
+                    ? `Голосов: ${votesData[cat.id][id]}` 
+                    : `Результаты скрыты`;
+
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
                     ${avatarHtml}
                     <div class="name">${p.name}</div>
-                    <div class="votes" id="vote-count-${cat.id}-${id}">Голосов: ${votesData[cat.id][id]}</div>
+                    <div class="votes" id="vote-count-${cat.id}-${id}">${votesText}</div>
                     <button class="vote-btn" onclick="castVote('${cat.id}', ${id})">Голосовать</button>
                 `;
                 grid.appendChild(card);
@@ -214,11 +224,23 @@
 
     function castVote(categoryId, userId) {
         votesData[categoryId][userId] += 1;
-        document.getElementById(`vote-count-${categoryId}-${userId}`).innerText = `Голосов: ${votesData[categoryId][userId]}`;
         saveData();
+
+        const counterElement = document.getElementById(`vote-count-${categoryId}-${userId}`);
+        
+        if (shouldShowResults()) {
+            counterElement.innerText = `Голосов: ${votesData[categoryId][userId]}`;
+        } else {
+            // Анимация подтверждения клика, чтобы пользователь видел, что голос засчитан
+            counterElement.innerText = `Голос учтен!`;
+            counterElement.style.color = 'var(--primary)';
+            setTimeout(() => {
+                counterElement.innerText = `Результаты скрыты`;
+                counterElement.style.color = 'var(--text-muted)';
+            }, 1500);
+        }
     }
 
-    // Сброс всех голосов во всех категориях
     function resetVotes() {
         const pass = prompt('Введите секретный пароль для сброса данных:');
         if (pass === SECRET_PASSWORD) {
@@ -235,14 +257,12 @@
         }
     }
 
-    // Секретные клавиши: Ctrl + Shift + Alt + R
     window.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.shiftKey && e.altKey && (e.key === 'r' || e.key === 'К' || e.key === 'R' || e.key === 'к')) {
             resetVotes();
         }
     });
 
-    // Секретные 5 кликов по логотипу
     let clickCount = 0;
     let clickTimeout;
     function secretClick() {
@@ -257,6 +277,9 @@
     }
 
     renderPage();
+    
+    // Каждую минуту проверяем время, чтобы сайт открыл результаты ровно в 04:00 без перезагрузки страницы
+    setInterval(renderPage, 60000);
 </script>
 
 </body>
