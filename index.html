@@ -3,89 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Завхоз — Голосование</title>
+    <title>Завхоз — Премия года</title>
     <style>
         :root {
-            --primary: #e6b800;
-            --primary-hover: #ffcc00;
-            --bg: #121212;
-            --card-bg: #1e1e1e;
-            --text: #ffffff;
-            --text-muted: #a0a0a0;
-            --gold: #ffd700;
-        }
-        body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            padding: 20px; 
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 40px; }
-        
-        h1 { 
-            font-size: 3.5rem; 
-            margin-bottom: 5px; 
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            cursor: pointer;
-            user-select: none;
-        }
-        header p { color: var(--text-muted); font-size: 1.1rem; }
-        
-        .category-section {
-            margin-bottom: 35px;
-            background: #161616;
-            padding: 30px 20px;
-            border-radius: 20px;
-            border: 1px solid #222;
-        }
-        .category-title {
-            font-size: 2rem;
-            color: var(--gold);
-            margin-top: 0;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-left: 5px solid var(--primary);
-            padding-left: 15px;
+            --bg-dark: #0a0a0a;
+            --bg-gradient: radial-gradient(circle at center, #16140f 0%, #0a0a0a 100%);
+            --card-bg: rgba(25, 25, 25, 0.65);
+            --gold-light: #ffe57f;
+            --gold-main: #d4af37;
+            --gold-dark: #aa841e;
+            --gold-gradient: linear-gradient(135deg, #ffe57f 0%, #d4af37 50%, #aa841e 100%);
+            --text-light: #f5f5f7;
+            --text-muted: #8e8e93;
+            --border-gold: rgba(212, 175, 55, 0.2);
         }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        body { 
+            font-family: 'Cinzel', 'Playfair Display', system-ui, -apple-system, sans-serif; 
+            background: var(--bg-gradient); 
+            color: var(--text-light); 
+            margin: 0; 
+            padding: 40px 20px; 
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        header { 
+            text-align: center; 
+            margin-bottom: 60px; 
+            position: relative;
+        }
+        
+        h1 { 
+            font-size: 4rem; 
+            font-weight: 800;
+            margin: 0 0 10px 0; 
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            filter: drop-shadow(0 2px 10px rgba(212, 175, 55, 0.3));
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s;
+        }
+        h1:hover {
+            transform: scale(1.02);
+        }
+
+        header p { 
+            color: var(--text-muted); 
+            font-size: 1.2rem; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+        
+        .category-section {
+            margin-bottom: 50px;
+            background: rgba(18, 18, 18, 0.8);
+            padding: 40px 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-top: 0;
+            margin-bottom: 35px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-align: center;
+            position: relative;
+        }
+        .category-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 2px;
+            background: var(--gold-gradient);
+            margin: 12px auto 0;
+            box-shadow: 0 0 8px var(--gold-main);
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); 
+            gap: 30px; 
+        }
         
         .card { 
             background: var(--card-bg); 
-            border-radius: 16px; 
-            padding: 25px 20px; 
+            border-radius: 20px; 
+            padding: 35px 25px; 
             text-align: center; 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
-            border: 1px solid #2a2a2a;
-            transition: transform 0.2s, border-color 0.2s; 
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); 
+            border: 1px solid var(--border-gold);
+            backdrop-filter: blur(5px);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
         }
         .card:hover { 
-            transform: translateY(-5px); 
-            border-color: var(--primary); 
+            transform: translateY(-8px); 
+            border-color: var(--gold-main);
+            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.15);
         }
         
-        .avatar { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; background: #2a2a2a; object-fit: cover; }
-        .name { font-size: 1.2rem; font-weight: 600; margin-bottom: 5px; min-height: 48px; display: flex; align-items: center; justify-content: center; }
-        .votes { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 15px; }
+        .avatar-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+        }
+        .avatar-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            border: 1px dashed var(--gold-main);
+            opacity: 0.4;
+            transition: transform 0.8s linear;
+        }
+        .card:hover .avatar-wrapper::after {
+            transform: rotate(180deg);
+            opacity: 0.8;
+        }
+
+        .avatar { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 2.8rem; 
+            background: linear-gradient(135deg, #252525 0%, #151515 100%); 
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6), 0 0 0 2px rgba(212, 175, 55, 0.2);
+            object-fit: cover; 
+        }
+
+        .name { 
+            font-size: 1.25rem; 
+            font-weight: 500; 
+            margin-bottom: 15px; 
+            min-height: 54px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            letter-spacing: 1px;
+            color: #ffffff;
+        }
+
+        .votes { 
+            font-size: 0.95rem; 
+            color: var(--gold-light); 
+            margin-bottom: 25px; 
+            letter-spacing: 1px;
+            background: rgba(212, 175, 55, 0.07);
+            padding: 8px 12px;
+            border-radius: 30px;
+            display: inline-block;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+        }
+        .votes.hidden-mode {
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
         
         .vote-btn { 
-            background-color: var(--primary); 
-            color: #000000; 
-            border: none; 
-            padding: 12px 20px; 
-            border-radius: 8px; 
-            font-weight: 700; 
+            background: transparent;
+            color: var(--gold-light); 
+            border: 1px solid var(--gold-main); 
+            padding: 14px 24px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
             cursor: pointer; 
             width: 100%; 
-            transition: background 0.2s; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease; 
         }
-        .vote-btn:hover { background-color: var(--primary-hover); }
+        .vote-btn:hover { 
+            background: var(--gold-gradient);
+            color: #000000;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            border-color: transparent;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -93,7 +205,7 @@
 <div class="container">
     <header>
         <h1 onclick="secretClick(this)">Завхоз</h1>
-        <p>Проголосуйте за своего фаворита в каждой номинации!</p>
+        <p>Закрытое премиальное голосование</p>
     </header>
 
     <div id="categories-container"></div>
@@ -103,7 +215,6 @@
     const SECRET_PASSWORD = "1234";
 
     // Дата открытия результатов: 25 мая 2026 года, 04:00 по Московскому времени (UTC+3)
-    // В формате ISO с указанием таймзоны +03:00
     const REVEAL_DATE = new Date("2026-05-25T04:00:00+03:00");
 
     const allParticipants = {
@@ -129,17 +240,17 @@
         {
             id: "meme",
             title: 'Мем года туда',
-            userIds: [1, 2, 3, 4, 8, 10]
+            userIds:
         },
         {
             id: "skill",
             title: 'Скилл года',
-            userIds: [3, 1, 2, 8, 15, 16]
+            userIds:
         },
         {
             id: "zavoz",
             title: 'Завоз года',
-            userIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+            userIds:
         }
     ];
 
@@ -169,7 +280,6 @@
         localStorage.setItem('electionVotes_zavhoz_categories_v1', JSON.stringify(votesData));
     }
 
-    // Функция проверки: пришло ли время показывать результаты
     function shouldShowResults() {
         return new Date() >= REVEAL_DATE;
     }
@@ -201,17 +311,18 @@
                     ? `<img src="${p.avatar}" class="avatar" alt="${p.name}">`
                     : `<div class="avatar">${p.avatar}</div>`;
 
-                // Если время не пришло, пишем заглушку вместо цифр
                 const votesText = showResults 
                     ? `Голосов: ${votesData[cat.id][id]}` 
-                    : `Результаты скрыты`;
+                    : `🔒 Результаты скрыты`;
 
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    ${avatarHtml}
+                    <div class="avatar-wrapper">
+                        ${avatarHtml}
+                    </div>
                     <div class="name">${p.name}</div>
-                    <div class="votes" id="vote-count-${cat.id}-${id}">${votesText}</div>
+                    <div class="votes ${showResults ? '' : 'hidden-mode'}" id="vote-count-${cat.id}-${id}">${votesText}</div>
                     <button class="vote-btn" onclick="castVote('${cat.id}', ${id})">Голосовать</button>
                 `;
                 grid.appendChild(card);
@@ -231,12 +342,13 @@
         if (shouldShowResults()) {
             counterElement.innerText = `Голосов: ${votesData[categoryId][userId]}`;
         } else {
-            // Анимация подтверждения клика, чтобы пользователь видел, что голос засчитан
-            counterElement.innerText = `Голос учтен!`;
-            counterElement.style.color = 'var(--primary)';
+            counterElement.innerText = `✨ Ваш голос учтен`;
+            counterElement.style.color = 'var(--gold-light)';
+            counterElement.style.borderColor = 'var(--gold-main)';
             setTimeout(() => {
-                counterElement.innerText = `Результаты скрыты`;
+                counterElement.innerText = `🔒 Результаты скрыты`;
                 counterElement.style.color = 'var(--text-muted)';
+                counterElement.style.borderColor = 'rgba(255, 255, 255, 0.05)';
             }, 1500);
         }
     }
@@ -277,8 +389,6 @@
     }
 
     renderPage();
-    
-    // Каждую минуту проверяем время, чтобы сайт открыл результаты ровно в 04:00 без перезагрузки страницы
     setInterval(renderPage, 60000);
 </script>
 
