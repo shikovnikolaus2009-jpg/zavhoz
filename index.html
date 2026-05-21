@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Завхоз — Голосование</title>
+    <style>
+        :root {
+            --primary: #e6b800;
+            --primary-hover: #ffcc00;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --gold: #ffd700;
+        }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 20px; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 40px; }
+        
+        h1 { 
+            font-size: 3.5rem; 
+            margin-bottom: 5px; 
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            cursor: pointer; /* Показывает, что на заголовок можно кликнуть */
+            user-select: none;
+        }
+        header p { color: var(--text-muted); font-size: 1.1rem; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 16px; 
+            padding: 25px 20px; 
+            text-align: center; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
+            border: 1px solid #2a2a2a;
+            transition: transform 0.2s, border-color 0.2s; 
+        }
+        .card:hover { 
+            transform: translateY(-5px); 
+            border-color: var(--primary); 
+        }
+        
+        .avatar { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; background: #2a2a2a; object-fit: cover; }
+        .name { font-size: 1.2rem; font-weight: 600; margin-bottom: 5px; min-height: 48px; display: flex; align-items: center; justify-content: center; }
+        .votes { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 15px; }
+        
+        .vote-btn { 
+            background-color: var(--primary); 
+            color: #000000; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            width: 100%; 
+            transition: background 0.2s; 
+        }
+        .vote-btn:hover { background-color: var(--primary-hover); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <!-- Секретный клик привязан к этому заголовку -->
+        <h1 onclick="secretClick(this)">Завхоз</h1>
+        <p>Проголосуйте за своего фаворита!</p>
+    </header>
+
+    <div class="grid" id="participants-grid"></div>
+</div>
+
+<script>
+    // Секретный пароль для сброса (можете поменять на любой свой)
+    const SECRET_PASSWORD = "1234";
+
+    const participants = [
+        { id: 1, name: "Шиков Николай", avatar: "👤" },
+        { id: 2, name: "Виталий Иванов", avatar: "👤" },
+        { id: 3, name: "Дмитрий Калинин", avatar: "👤" },
+        { id: 4, name: "Даша Тутынева", avatar: "👤" },
+        { id: 5, name: "Кирилл Андреев", avatar: "👤" },
+        { id: 6, name: "Кирилл Коваленко", avatar: "👤" },
+        { id: 7, name: "Алена Леонова", avatar: "👤" },
+        { id: 8, name: "Миша Плесовских", avatar: "👤" },
+        { id: 9, name: "Максим Кугубаев", avatar: "👤" },
+        { id: 10, name: "Савелий Кухаренко", avatar: "👤" }
+    ];
+
+    let votesData = JSON.parse(localStorage.getItem('electionVotes_zavhoz_secure'));
+    if (!votesData) {
+        votesData = {};
+        participants.forEach(p => votesData[p.id] = 0);
+        saveData();
+    }
+
+    function saveData() {
+        localStorage.setItem('electionVotes_zavhoz_secure', JSON.stringify(votesData));
+    }
+
+    function renderCards() {
+        const grid = document.getElementById('participants-grid');
+        grid.innerHTML = '';
+
+        participants.forEach(p => {
+            const isUrl = p.avatar.startsWith('http') || p.avatar.startsWith('./') || p.avatar.endsWith('.png') || p.avatar.endsWith('.jpg');
+            const avatarHtml = isUrl 
+                ? `<img src="${p.avatar}" class="avatar" alt="${p.name}">`
+                : `<div class="avatar">${p.avatar}</div>`;
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                ${avatarHtml}
+                <div class="name">${p.name}</div>
+                <div class="votes" id="vote-count-${p.id}">Голосов: ${votesData[p.id]}</div>
+                <button class="vote-btn" onclick="castVote(${p.id})">Голосовать</button>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function castVote(id) {
+        votesData[id] += 1;
+        document.getElementById(`vote-count-${id}`).innerText = `Голосов: ${votesData[id]}`;
+        saveData();
+    }
+
+    // Функция защищенного сброса
+    function resetVotes() {
+        const pass = prompt('Введите секретный пароль для сброса данных:');
+        if (pass === SECRET_PASSWORD) {
+            participants.forEach(p => votesData[p.id] = 0);
+            saveData();
+            renderCards();
+            alert('Все голоса успешно обнулены!');
+        } else if (pass !== null) {
+            alert('Неверный пароль! Доступ заблокирован.');
+        }
+    }
+
+    // 1. Секретная комбинация клавиш: Ctrl + Shift + Alt + R
+    window.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && e.altKey && (e.key === 'r' || e.key === 'К' || e.key === 'R' || e.key === 'к')) {
+            resetVotes();
+        }
+    });
+
+    // 2. Секретные 5 кликов по заголовку
+    let clickCount = 0;
+    let clickTimeout;
+    function secretClick() {
+        clickCount++;
+        clearTimeout(clickTimeout);
+        if (clickCount >= 5) {
+            clickCount = 0;
+            resetVotes();
+        } else {
+            clickTimeout = setTimeout(() => { clickCount = 0; }, 2000); // Сброс счетчика кликов через 2 секунды простоя
+        }
+    }
+
+    renderCards();
+</script>
+
+</body>
+</html>
